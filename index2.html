@@ -1,23 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SPACEMAN VIP GACOR</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; }
-        canvas { border: 2px solid #333; background: #050505; width: 100%; max-width: 400px; }
-        #multiplier { font-size: 48px; color: #0f0; margin: 10px; }
-        .btn { padding: 15px 30px; font-size: 18px; cursor: pointer; background: #007bff; color: #fff; border: none; border-radius: 5px; }
+        body { background: #000; color: #fff; font-family: 'Arial', sans-serif; text-align: center; margin: 0; padding: 20px; }
+        .container { max-width: 400px; margin: auto; border: 2px solid #333; padding: 20px; border-radius: 15px; background: #0a0a0a; }
+        canvas { background: #050505; border-radius: 10px; width: 100%; height: auto; margin-bottom: 10px; }
+        #multiplier { font-size: 50px; color: #0f0; font-weight: bold; margin: 15px 0; }
+        .stat-box { display: flex; justify-content: space-around; margin-bottom: 15px; font-size: 18px; }
+        input { width: 80%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: none; font-size: 16px; text-align: center; }
+        .btn { width: 100%; padding: 15px; font-size: 18px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; text-transform: uppercase; }
+        #btn-bet { background: #007bff; color: white; }
+        #btn-cashout { background: #ff9800; color: white; display: none; }
     </style>
 </head>
 <body>
-    <h1>👨‍🚀 SPACEMAN VIP</h1>
-    <p>Saldo: <span id="balance">1000</span></p>
-    <input type="number" id="bet-amount" value="10" style="padding:10px; width:60px;">
-    <div id="multiplier">1.00x</div>
-    <canvas id="gameCanvas" width="400" height="300"></canvas>
-    <br><br>
-    <button id="btn-bet" class="btn" onclick="startRun()">PASANG TARUHAN</button>
-    <button id="btn-cashout" class="btn" style="display:none; background:orange;" onclick="cashOut()">AMBIL UNTUNG</button>
+    <div class="container">
+        <h2>👨‍🚀 SPACEMAN VIP</h2>
+        <div class="stat-box">
+            <span>Saldo: <b id="balance">1000</b></span>
+        </div>
+        <div id="multiplier">1.00x</div>
+        <canvas id="gameCanvas" width="400" height="250"></canvas>
+        <input type="number" id="bet-amount" value="10" min="1">
+        <button id="btn-bet" class="btn" onclick="startRun()">PASANG TARUHAN</button>
+        <button id="btn-cashout" class="btn" onclick="cashOut()">AMBIL UNTUNG</button>
+    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -25,31 +35,25 @@
         const multiplierEl = document.getElementById('multiplier');
         const balanceEl = document.getElementById('balance');
         
-        // LINK REMOTE LU
+        // LINK REMOTE OTOMATIS KE AKUN LU
         const GITHUB_RAW = "https://raw.githubusercontent.com/ranggaananda9308-oss/spaceman-gacor777/main/remote2.json";
 
-        let balance = 1000;
-        let isRunning = false;
-        let currentMultiplier = 1.00;
-        let crashMultiplier = 2.00;
-        let spacemanX = 50;
-        let spacemanY = 200;
-        let angle = 0;
+        let balance = 1000, isRunning = false, currentMultiplier = 1.00;
+        let crashMultiplier = 2.00, spacemanX = 50, spacemanY = 150, angle = 0;
 
-        // CEK REMOTE TIAP 1 DETIK
+        // SISTEM PENYADAP REMOTE (Cek tiap 1 detik)
         setInterval(() => {
             fetch(GITHUB_RAW)
                 .then(res => res.json())
-                .then(data => {
-                    crashMultiplier = parseFloat(data.angka);
-                }).catch(e => console.log("Remote Error"));
+                .then(data => { crashMultiplier = parseFloat(data.angka); })
+                .catch(() => console.log("Menunggu Remote..."));
         }, 1000);
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#fff';
-            for(let i=0; i<20; i++) ctx.fillRect(Math.random()*400, Math.random()*300, 2, 2);
-            ctx.font = '40px Arial';
+            for(let i=0; i<30; i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
+            ctx.font = '50px Arial';
             ctx.fillText('👨‍🚀', spacemanX, spacemanY);
         }
 
@@ -57,18 +61,15 @@
             if (!isRunning) return;
             draw();
             angle += 0.05;
-            spacemanY = 200 + Math.sin(angle) * 30;
-            spacemanX += 0.5;
+            spacemanY = 150 + Math.sin(angle) * 25;
+            spacemanX += 0.6;
 
-            // KODE BIAR NAIK KENCENG
-            currentMultiplier += 0.05 * (1 + currentMultiplier * 0.05);
+            // AKSELERASI GACOR (Biar tembus angka 10.00+)
+            currentMultiplier += 0.05 * (1 + currentMultiplier * 0.06);
             multiplierEl.innerText = currentMultiplier.toFixed(2) + 'x';
 
             if (currentMultiplier >= crashMultiplier) {
-                isRunning = false;
-                multiplierEl.style.color = 'red';
-                multiplierEl.innerText = "BOOM! MELEDAK DI " + currentMultiplier.toFixed(2) + "x";
-                resetGame();
+                endGame(true);
             } else {
                 requestAnimationFrame(update);
             }
@@ -76,30 +77,30 @@
 
         function startRun() {
             let bet = parseInt(document.getElementById('bet-amount').value);
-            if (bet > balance) return alert("Saldo Kurang!");
-            balance -= bet;
-            balanceEl.innerText = balance;
-            isRunning = true;
-            currentMultiplier = 1.00;
-            spacemanX = 50;
+            if (bet > balance || isNaN(bet)) return alert("Cek Saldo/Bet!");
+            balance -= bet; balanceEl.innerText = balance;
+            isRunning = true; currentMultiplier = 1.00; spacemanX = 50;
             multiplierEl.style.color = '#0f0';
             document.getElementById('btn-bet').style.display = 'none';
-            document.getElementById('btn-cashout').style.display = 'inline-block';
-            requestAnimationFrame(update);
+            document.getElementById('btn-cashout').style.display = 'block';
+            update();
         }
 
         function cashOut() {
             if (!isRunning) return;
             let win = parseInt(document.getElementById('bet-amount').value) * currentMultiplier;
-            balance += win;
-            balanceEl.innerText = Math.floor(balance);
-            isRunning = false;
-            alert("Menang: " + win.toFixed(2));
-            resetGame();
+            balance += Math.floor(win); balanceEl.innerText = balance;
+            alert("🤑 PROFIT: " + win.toFixed(2) + "x");
+            endGame(false);
         }
 
-        function resetGame() {
-            document.getElementById('btn-bet').style.display = 'inline-block';
+        function endGame(isCrash) {
+            isRunning = false;
+            if (isCrash) {
+                multiplierEl.style.color = 'red';
+                multiplierEl.innerText = "BOOM! @ " + currentMultiplier.toFixed(2) + "x";
+            }
+            document.getElementById('btn-bet').style.display = 'block';
             document.getElementById('btn-cashout').style.display = 'none';
         }
         draw();
